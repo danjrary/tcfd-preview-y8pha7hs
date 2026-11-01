@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>TCFD鑑別結果一頁式（預覽）</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.6.0/echarts.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --ink: #1d2733;
+    --muted: #66717d;
+    --line: #e1e6ec;
+    --primary: #1f5f8b;
+    --primary-soft: #e8f1f8;
+    --warn-bg: #fff6e0;
+    --warn-ink: #8a5a00;
+    --material: #b42318;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .page { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  header.top img { height: 34px; }
+  .eyebrow { color: var(--muted); font-size: 13px; margin: 0; }
+  h1 { font-size: 26px; margin: 4px 0 0; letter-spacing: 0.5px; }
+  h2 { font-size: 18px; margin: 0 0 12px; }
+  h3 { font-size: 15px; margin: 0 0 8px; }
+  .notice { background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; padding: 10px 14px; margin: 16px 0; font-size: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin-top: 16px; }
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; counter-reset: step; }
+  .flow div { background: var(--primary-soft); border-radius: 8px; padding: 10px 12px; font-size: 14px; position: relative; }
+  .flow div b { display: block; color: var(--primary); }
+  .flow div::before { counter-increment: step; content: counter(step); position: absolute; top: 8px; right: 10px; color: var(--primary); opacity: 0.35; font-weight: 700; font-size: 20px; }
+  .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .kpi .v { font-size: 26px; font-weight: 700; color: var(--primary); line-height: 1.2; }
+  .kpi .v small { font-size: 14px; font-weight: 500; margin-left: 2px; }
+  .kpi .l { color: var(--muted); font-size: 13px; }
+  .kpi .v.material { color: var(--material); }
+  .matrices { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .chart { width: 100%; height: 470px; }
+  .legend-row { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .bigframe { display: inline-block; width: 14px; height: 10px; border: 2px solid #8a1c1c; margin-right: 6px; vertical-align: middle; }
+  .items-legend { columns: 2; column-gap: 24px; font-size: 13px; margin: 8px 0 0; padding: 0; list-style: none; }
+  .items-legend li { break-inside: avoid; }
+  .items-legend b { display: inline-block; min-width: 26px; color: var(--primary); }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 7px 8px; text-align: left; vertical-align: top; white-space: nowrap; }
+  th { background: #f0f3f7; font-weight: 600; font-size: 13px; color: #3d4954; }
+  td.wrap { white-space: normal; min-width: 160px; }
+  tr.unrated td { color: #a3abb4; }
+  .tag { display: inline-block; border-radius: 4px; padding: 0 6px; font-size: 12px; }
+  .tag.ok { background: #e6f4ea; color: #1e6b34; }
+  .tag.half { background: var(--warn-bg); color: var(--warn-ink); }
+  .tag.material { background: #fde8e6; color: var(--material); }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .toolbar label { font-size: 13px; color: var(--muted); cursor: pointer; }
+  .method { margin: 0; padding-left: 20px; }
+  .method li { margin-bottom: 4px; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 24px; }
+  @media (max-width: 900px) {
+    .matrices { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .flow { grid-template-columns: repeat(2, 1fr); }
+    .items-legend { columns: 1; }
+    h1 { font-size: 21px; }
+  }
+  @media print {
+    body { background: #fff; }
+    .card, .kpi { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div>
+      <p class="eyebrow">2026年示範公司TCFD問卷｜Syber 資搜表「氣候變遷風險鑑別」</p>
+      <h1>氣候風險鑑別結果：問卷結果與合併前後矩陣</h1>
+    </div>
+    <img src="https://cdn-official-website.sustaihub.com/media/images/Logo-YongXunZhiKuHeiZi.original.png" alt="永訊智庫">
+  </header>
+
+  <div class="notice">預覽版：本頁數字來自2026年10月31日 Syber 派發測試的2個測試單位，只用來呈現版面與計算方式，不是正式評估結果。正式版會換成各負責單位實際填答的資料。</div>
+
+  <section class="card">
+    <h2>資料從哪裡來</h2>
+    <div class="flow">
+      <div><b>Syber 填答</b>各負責單位在資搜表逐項選擇5個欄位</div>
+      <div><b>數據中心匯出</b>回收後由顧問下載數據中心 Excel</div>
+      <div><b>匯入TCFD平台</b>每個負責單位成為一位填答人，設定權重</div>
+      <div><b>產出本頁</b>依權重合併，呈現合併前後矩陣</div>
+    </div>
+  </section>
+
+  <section class="kpis" style="margin-top:16px" id="kpis"></section>
+
+  <section class="card">
+    <h2>矩陣</h2>
+    <div class="matrices">
+      <div>
+        <div id="chart-pre" class="chart"></div>
+        <div class="legend-row" id="unit-legend"></div>
+      </div>
+      <div>
+        <div id="chart-post" class="chart"></div>
+        <div class="legend-row">
+          <span><i class="dot" style="background:#1f5f8b"></i>一般項目</span>
+          <span><i class="dot" style="background:#b42318"></i>重大項目</span>
+          <span><i class="bigframe"></i>重大區域（強度≥中高且可能性≥一定程度的可能）</span>
+        </div>
+      </div>
+    </div>
+    <h3 style="margin-top:16px">項目對照（點上的數字）</h3>
+    <ul class="items-legend" id="items-legend"></ul>
+  </section>
+
+  <section class="card">
+    <div class="toolbar">
+      <h2 style="margin:0">合併結果</h2>
+      <label><input type="checkbox" id="only-rated" checked> 只顯示已評分項目</label>
+    </div>
+    <div class="table-wrap"><table id="merged-table"></table></div>
+  </section>
+
+  <section class="card">
+    <h2>各負責單位填答明細</h2>
+    <div class="table-wrap"><table id="detail-table"></table></div>
+  </section>
+
+  <section class="card">
+    <h2>計算方式</h2>
+    <ul class="method">
+      <li>只有「衝擊強度」與「可能性」都有填的評分才納入合併；只填一邊的評分會保留在明細，但不畫在矩陣、不參與合併。</li>
+      <li>等級：強度 低＝1至高＝5；可能性 絕對不可能＝1至確定＝8。</li>
+      <li>合併強度＝Σ（權重×強度）÷Σ權重，合併可能性同理；結果剛好是 .5 時取偶數等級（五成雙），其餘四捨五入。與舊TCFD系統的合併算法相同。</li>
+      <li>重大項目：合併後強度≥中高且可能性≥一定程度的可能（門檻可依客戶需求調整）。</li>
+      <li>衝擊範圍、衝擊類型、發生時間只列在明細，不參與合併。</li>
+    </ul>
+  </section>
+
+  <footer>資料來源：Syber 數據中心匯出檔（示範公司_數據中心.xlsx）；項目類別與面向依「示範公司_氣候變遷風險與機會鑑別表.xlsx」。產製日期：2026年11月2日。</footer>
+</div>
+
+<script>
+const DATA = {"questionnaire": "氣候變遷風險鑑別", "units": [{"name": "測試單位", "weight": "1"}, {"name": "測試單位B", "weight": "1"}], "items": [{"code": "R01", "no": 1, "name": "碳費/碳稅", "category": "轉型", "aspect": "法規"}, {"code": "R02", "no": 2, "name": "燃料稅/能源稅", "category": "轉型", "aspect": "法規"}, {"code": "R03", "no": 3, "name": "溫室氣體總量管制", "category": "轉型", "aspect": "法規"}, {"code": "R04", "no": 4, "name": "強制申報", "category": "轉型", "aspect": "法規"}, {"code": "R05", "no": 5, "name": "建築或產品效率、標示法規與標準", "category": "轉型", "aspect": "法規"}, {"code": "R06", "no": 6, "name": "再生能源政策", "category": "轉型", "aspect": "法規"}, {"code": "R07", "no": 7, "name": "環境法規要求", "category": "轉型", "aspect": "法規"}, {"code": "R08", "no": 8, "name": "符合自願性國際協議", "category": "轉型", "aspect": "法規"}, {"code": "R09", "no": 9, "name": "法律訴訟", "category": "轉型", "aspect": "訴訟"}, {"code": "R10", "no": 10, "name": "原有設備與技術汰換", "category": "轉型", "aspect": "技術"}, {"code": "R11", "no": 11, "name": "創新研發不如預期", "category": "轉型", "aspect": "技術"}, {"code": "R12", "no": 12, "name": "顧客行為轉變", "category": "轉型", "aspect": "市場"}, {"code": "R13", "no": 13, "name": "自然資源改變以致原物料價格波動", "category": "轉型", "aspect": "市場"}, {"code": "R14", "no": 14, "name": "永續/再生材料價格波動", "category": "轉型", "aspect": "市場"}, {"code": "R15", "no": 15, "name": "金融危機", "category": "轉型", "aspect": "市場"}, {"code": "R16", "no": 16, "name": "不良名聲", "category": "轉型", "aspect": "商譽"}, {"code": "R17", "no": 17, "name": "極端強降雨-淹水", "category": "實體", "aspect": "立即"}, {"code": "R18", "no": 18, "name": "水資源短缺與供水中斷", "category": "實體", "aspect": "立即"}, {"code": "R19", "no": 19, "name": "海平面上升", "category": "實體", "aspect": "長期"}, {"code": "R20", "no": 20, "name": "土石流", "category": "實體", "aspect": "長期"}, {"code": "R21", "no": 21, "name": "極端高溫", "category": "實體", "aspect": "長期"}, {"code": "R22", "no": 22, "name": "生態系崩潰", "category": "實體", "aspect": "長期"}, {"code": "R23", "no": 23, "name": "人權與供應鏈管理議題", "category": "其他", "aspect": "其他"}], "responses": [{"unit": "測試單位", "code": "R01", "raw": {"impact_range": "公司直接營運", "impact_category": "直接成本增加", "strength": "中高", "duration": "中期", "probability": "可能（>66%會發生）"}, "codes": {"impact_range": "direct_operations", "impact_category": "direct_cost_increase", "strength": "medium_high", "duration": "medium", "probability": "likely"}, "paired": true, "strength_level": 4, "probability_level": 6}, {"unit": "測試單位", "code": "R03", "raw": {"impact_range": "", "impact_category": "", "strength": "中", "duration": "", "probability": ""}, "codes": {"impact_range": null, "impact_category": null, "strength": "medium", "duration": null, "probability": null}, "paired": false, "strength_level": 3, "probability_level": null}, {"unit": "測試單位B", "code": "R01", "raw": {"impact_range": "", "impact_category": "", "strength": "低", "duration": "", "probability": "一定程度的可能（>50%會發生）"}, "codes": {"impact_range": null, "impact_category": null, "strength": "low", "duration": null, "probability": "more_likely_than_not"}, "paired": true, "strength_level": 1, "probability_level": 5}, {"unit": "測試單位B", "code": "R02", "raw": {"impact_range": "", "impact_category": "", "strength": "低", "duration": "", "probability": "不太可能（<33%會發生）"}, "codes": {"impact_range": null, "impact_category": null, "strength": "low", "duration": null, "probability": "unlikely"}, "paired": true, "strength_level": 1, "probability_level": 3}, {"unit": "測試單位B", "code": "R03", "raw": {"impact_range": "", "impact_category": "", "strength": "中低", "duration": "", "probability": "或許可能（33-50%會發生）"}, "codes": {"impact_range": null, "impact_category": null, "strength": "medium_low", "duration": null, "probability": "about_as_likely_as_not"}, "paired": true, "strength_level": 2, "probability_level": 4}], "merged": [{"code": "R01", "strength": 2, "probability": 6, "strength_code": "medium_low", "probability_code": "likely", "included": 2, "material": false}, {"code": "R02", "strength": 1, "probability": 3, "strength_code": "low", "probability_code": "unlikely", "included": 1, "material": false}, {"code": "R03", "strength": 2, "probability": 4, "strength_code": "medium_low", "probability_code": "about_as_likely_as_not", "included": 1, "material": false}], "threshold": {"min_strength": 4, "min_probability": 5}};
+
+const STRENGTH = ['低', '中低', '中', '中高', '高'];
+const PROB_SHORT = ['絕對不可能', '非常不可能', '不太可能', '或許可能', '一定程度的可能', '可能', '非常可能', '確定'];
+const BAND_COLORS = ['#e4f2e7', '#eef3d6', '#fbebc8', '#f9d3b4', '#f3aea4'];
+const SYMBOL_SIZE = [0, 28, 22, 17, 13, 11, 9];
+const PALETTE = ['#1f77b4', '#d62728', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', '#17becf', '#bcbd22'];
+const TH = DATA.threshold;
+const itemByCode = Object.fromEntries(DATA.items.map((i) => [i.code, i]));
+const unitIndex = Object.fromEntries(DATA.units.map((u, i) => [u.name, i]));
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+// 與系統 matrix/layout.ts 相同：同一格多個點排成小方陣，不使用隨機偏移
+function placePoints(points) {
+  const cells = new Map();
+  for (const p of points) {
+    const id = `${p.strength}-${p.probability}`;
+    if (!cells.has(id)) cells.set(id, []);
+    cells.get(id).push(p);
+  }
+  const placed = [];
+  for (const list of cells.values()) {
+    list.sort((a, b) => a.sortKey[0] - b.sortKey[0] || a.sortKey[1] - b.sortKey[1] || a.key.localeCompare(b.key));
+    const perRow = Math.ceil(Math.sqrt(list.length));
+    const rows = Math.ceil(list.length / perRow);
+    list.forEach((p, i) => {
+      const col = i % perRow;
+      const row = Math.floor(i / perRow);
+      placed.push({ ...p, perRow, x: p.probability - 1 + (col + 0.5) / perRow, y: p.strength - (row + 0.5) / rows });
+    });
+  }
+  return placed;
+}
+function cellBand(s, p) {
+  return Math.min(4, Math.floor(((s - 1) / 4 + (p - 1) / 7) / 0.4));
+}
+
+// 與系統 RiskMatrix.tsx 相同的 ECharts 設定
+function drawMatrix(el, title, points) {
+  const chart = echarts.init(el, undefined, { renderer: 'canvas' });
+  const cells = [];
+  for (let s = 1; s <= 5; s++) for (let p = 1; p <= 8; p++) {
+    cells.push([p, s, cellBand(s, p), s >= TH.min_strength && p >= TH.min_probability ? 1 : 0]);
+  }
+  cells.sort((a, b) => a[3] - b[3]);
+  const placed = placePoints(points);
+  // 兩張並排時每格較窄：刻度文字寬度跟著格寬調整，避免相鄰文字重疊（其餘設定與系統相同）
+  // 手機寬度每格不到44px時改為斜排，否則文字會互相疊在一起
+  const cellWidth = () => (el.clientWidth - 116) / 8;
+  const axisLabel = () => {
+    const w = cellWidth();
+    return w >= 44
+      ? { interval: 0, rotate: 0, width: Math.min(72, w - 6), fontSize: w < 66 ? 11 : 12, overflow: 'break', lineHeight: 14 }
+      : { interval: 0, rotate: 45, width: 120, fontSize: 10, overflow: 'none', lineHeight: 12 };
+  };
+  const grid = () => ({ left: 92, right: 24, top: 44, bottom: cellWidth() >= 44 ? 78 : 104 });
+  chart.setOption({
+    title: { text: title, left: 'center', top: 4, textStyle: { fontSize: 15 } },
+    animation: false,
+    backgroundColor: '#ffffff',
+    grid: grid(),
+    tooltip: { trigger: 'item', formatter: (pr) => (pr.data?.tip ?? []).map(esc).join('<br/>') },
+    toolbox: { right: 8, top: 0, feature: { saveAsImage: { title: '下載圖片', name: title, pixelRatio: 2 } } },
+    xAxis: [
+      { type: 'category', data: PROB_SHORT, name: '可能性', nameLocation: 'middle', nameGap: cellWidth() >= 44 ? 52 : 78,
+        axisTick: { show: false }, axisLabel: axisLabel() },
+      { type: 'value', min: 0, max: 8, show: false },
+    ],
+    yAxis: [
+      { type: 'category', data: STRENGTH, name: '衝擊強度', nameLocation: 'middle', nameGap: 64, axisTick: { show: false } },
+      { type: 'value', min: 0, max: 5, show: false },
+    ],
+    series: [
+      {
+        type: 'custom', xAxisIndex: 1, yAxisIndex: 1, silent: true, data: cells,
+        renderItem: (_params, api) => {
+          const p = api.value(0), s = api.value(1), band = api.value(2), material = api.value(3) === 1;
+          const [x0, y0] = api.coord([p - 1, s]);
+          const [x1, y1] = api.coord([p, s - 1]);
+          return { type: 'rect', shape: { x: x0, y: y0, width: x1 - x0, height: y1 - y0 },
+            style: { fill: BAND_COLORS[band], stroke: material ? '#8a1c1c' : '#ffffff', lineWidth: material ? 2.5 : 1 } };
+        },
+      },
+      {
+        type: 'scatter', xAxisIndex: 1, yAxisIndex: 1,
+        data: placed.map((p) => {
+          const size = SYMBOL_SIZE[Math.min(p.perRow, SYMBOL_SIZE.length - 1)] ?? 9;
+          return { value: [p.x, p.y], tip: p.tooltip, symbolSize: size,
+            itemStyle: { color: p.color, borderColor: '#ffffff', borderWidth: 1 },
+            label: { show: size >= 13, formatter: p.label, color: '#ffffff', fontSize: size >= 22 ? 12 : 10, fontWeight: 'bold' } };
+        }),
+      },
+    ],
+  }, true);
+  new ResizeObserver(() => {
+    chart.setOption({ grid: grid(), xAxis: [{ axisLabel: axisLabel(), nameGap: cellWidth() >= 44 ? 52 : 78 }, {}] });
+    chart.resize();
+  }).observe(el);
+}
+
+const describe = (s, p) => `衝擊強度：${STRENGTH[s - 1]}，可能性：${PROB_SHORT[p - 1]}`;
+const paired = DATA.responses.filter((r) => r.paired);
+const prePoints = paired.map((r) => {
+  const it = itemByCode[r.code];
+  const unit = DATA.units[unitIndex[r.unit]];
+  return {
+    key: `${r.unit}-${r.code}`, strength: r.strength_level, probability: r.probability_level,
+    label: String(it.no), color: PALETTE[unitIndex[r.unit] % PALETTE.length], sortKey: [it.no, unitIndex[r.unit]],
+    tooltip: [`${it.code} ${it.name}`, `填答人：${unit.name}（權重 ${Number(unit.weight)}）`, describe(r.strength_level, r.probability_level)],
+  };
+});
+const postPoints = DATA.merged.map((m) => {
+  const it = itemByCode[m.code];
+  return {
+    key: `m-${m.code}`, strength: m.strength, probability: m.probability, label: String(it.no),
+    color: m.material ? '#b42318' : '#1f5f8b', sortKey: [it.no, 0],
+    tooltip: [`${it.code} ${it.name}`, describe(m.strength, m.probability), `納入評分：${m.included}`],
+  };
+});
+drawMatrix(document.getElementById('chart-pre'), '合併前矩陣', prePoints);
+drawMatrix(document.getElementById('chart-post'), '合併後矩陣', postPoints);
+
+document.getElementById('unit-legend').innerHTML = DATA.units
+  .map((u, i) => `<span><i class="dot" style="background:${PALETTE[i % PALETTE.length]}"></i>${esc(u.name)}（權重${Number(u.weight)}）</span>`)
+  .join('');
+
+const ratedCodes = new Set(DATA.responses.map((r) => r.code));
+document.getElementById('items-legend').innerHTML = DATA.items
+  .filter((i) => ratedCodes.has(i.code))
+  .map((i) => `<li><b>${i.no}</b>${esc(i.code)} ${esc(i.name)}</li>`)
+  .join('');
+
+const halfCount = DATA.responses.length - paired.length;
+const materialCount = DATA.merged.filter((m) => m.material).length;
+const kpi = (v, unit, l, cls = '') => `<div class="kpi"><div class="v ${cls}">${v}<small>${unit}</small></div><div class="l">${l}</div></div>`;
+document.getElementById('kpis').innerHTML = [
+  kpi(DATA.items.length, '項', '評估項目'),
+  kpi(DATA.units.length, '個', '填答負責單位'),
+  kpi(paired.length, '筆', `成對評分（另有${halfCount}筆單邊，不納入）`),
+  kpi(DATA.merged.length, '項', '有合併結果的項目'),
+  kpi(materialCount, '項', '重大項目', 'material'),
+].join('');
+
+function renderMerged() {
+  const onlyRated = document.getElementById('only-rated').checked;
+  const mergedBy = Object.fromEntries(DATA.merged.map((m) => [m.code, m]));
+  const head = `<tr><th>代碼</th><th>類別</th><th>面向</th><th>來源</th>${DATA.units
+    .map((u) => `<th>${esc(u.name)}<br><span style="font-weight:400">權重${Number(u.weight)}</span></th>`)
+    .join('')}<th>合併強度</th><th>合併可能性</th><th>納入</th><th>重大</th></tr>`;
+  const rows = DATA.items
+    .filter((it) => !onlyRated || ratedCodes.has(it.code))
+    .map((it) => {
+      const m = mergedBy[it.code];
+      const unitCells = DATA.units.map((u) => {
+        const r = DATA.responses.find((x) => x.unit === u.name && x.code === it.code);
+        if (!r) return '<td>－</td>';
+        const s = r.strength_level ? STRENGTH[r.strength_level - 1] : '未填';
+        const p = r.probability_level ? PROB_SHORT[r.probability_level - 1] : '未填';
+        return `<td>${s}／${p}${r.paired ? '' : ' <span class="tag half">單邊</span>'}</td>`;
+      }).join('');
+      return `<tr class="${m ? '' : 'unrated'}"><td>${esc(it.code)}</td><td>${esc(it.category)}</td><td>${esc(it.aspect)}</td><td class="wrap">${esc(it.name)}</td>${unitCells}
+        <td>${m ? STRENGTH[m.strength - 1] : '未評分'}</td><td>${m ? PROB_SHORT[m.probability - 1] : ''}</td>
+        <td>${m ? m.included + '筆' : ''}</td><td>${m?.material ? '<span class="tag material">重大</span>' : ''}</td></tr>`;
+    }).join('');
+  document.getElementById('merged-table').innerHTML = `<thead>${head}</thead><tbody>${rows}</tbody>`;
+}
+document.getElementById('only-rated').addEventListener('change', renderMerged);
+renderMerged();
+
+const FIELDS = [['impact_range', '衝擊範圍'], ['impact_category', '衝擊類型'], ['strength', '衝擊強度'], ['duration', '發生時間'], ['probability', '可能性']];
+document.getElementById('detail-table').innerHTML =
+  `<thead><tr><th>負責單位</th><th>代碼</th><th>來源</th>${FIELDS.map(([, l]) => `<th>${l}</th>`).join('')}<th>狀態</th></tr></thead><tbody>` +
+  DATA.responses.map((r) => {
+    const it = itemByCode[r.code];
+    return `<tr><td>${esc(r.unit)}</td><td>${esc(r.code)}</td><td class="wrap">${esc(it.name)}</td>${FIELDS
+      .map(([f]) => `<td>${esc(r.raw[f]) || '－'}</td>`).join('')}<td>${r.paired
+      ? '<span class="tag ok">納入合併</span>' : '<span class="tag half">只填一邊，不納入</span>'}</td></tr>`;
+  }).join('') + '</tbody>';
+</script>
+</body>
+</html>
